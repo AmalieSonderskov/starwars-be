@@ -112,4 +112,14 @@ builder.queryFields((t) => ({
         where: { id },
       }),
   }),
+
+  //Get all items for sale
+  itemsForSale: t.prismaField({
+    type: ["Item"],
+    resolve: (_, q) =>
+      prisma.item.findMany({
+        ...q,
+        where: { forSale: true },
+      }),
+  }),
 }));
