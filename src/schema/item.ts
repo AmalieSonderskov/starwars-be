@@ -6,7 +6,7 @@ interface Context {
 }
 
 const isAdmin = (ctx: Context) => {
-  return !ctx.user || ctx.user.role !== "ADMIN";
+  return ctx.user && ctx.user.role === "ADMIN";
 };
 
 builder.prismaObject("Item", {
@@ -24,7 +24,6 @@ builder.prismaObject("Item", {
 
 const itemInputRef = builder.inputType("ItemInput", {
   fields: (t) => ({
-    id: t.int({ required: true }),
     name: t.string({ required: true }),
     type: t.string({ required: true }),
     price: t.float({ required: true }),
@@ -41,16 +40,18 @@ export const a = builder.mutationType({
       type: "Item",
       args: {
         item: t.arg({ type: itemInputRef, required: true }),
+        itemId: t.arg.int({ required: true }),
       },
-      resolve: async (q, _, { item }, ctx) => {
-        if (isAdmin(ctx)) throw new Error("Not authorized");
+      resolve: async (q, _, { item, itemId }, ctx) => {
+        if (!isAdmin(ctx)) throw new Error("Not authorized");
         return prisma.item.update({
           ...q,
           where: {
-            id: item.id,
+            id: itemId,
           },
           data: {
             ...item,
+            id: itemId,
           },
         });
       },
@@ -59,20 +60,15 @@ export const a = builder.mutationType({
     createItem: t.prismaField({
       type: "Item",
       args: {
-        name: t.arg.string({ required: true }),
-        type: t.arg.string({ required: true }),
-        price: t.arg.float({ required: true }),
-        description: t.arg.string({ required: true }),
-        userId: t.arg.int({ required: true }),
-        forSale: t.arg.boolean({ required: true }),
+        item: t.arg({ type: itemInputRef, required: true }),
       },
       resolve: async (q, _, args, ctx) => {
-        if (isAdmin(ctx)) throw new Error("Not authorized");
-
+        if (!isAdmin(ctx)) throw new Error("Not authorized");
+        const { item } = args;
         return prisma.item.create({
           ...q,
           data: {
-            ...args,
+            ...item,
           },
         });
       },
@@ -85,7 +81,7 @@ builder.queryFields((t) => ({
   items: t.prismaField({
     type: ["Item"],
     resolve: (q, _, __, ctx) => {
-      if (isAdmin(ctx)) throw new Error("Not authorized");
+      if (!isAdmin(ctx)) throw new Error("Not authorized");
       return prisma.item.findMany({
         ...q,
       });
