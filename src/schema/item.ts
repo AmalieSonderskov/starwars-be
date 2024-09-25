@@ -1,12 +1,8 @@
 import { User } from "@prisma/client";
 import { builder, prisma } from "../builder";
 
-interface Context {
-  user: User;
-}
-
-const isAdmin = (ctx: Context) => {
-  return ctx.user && ctx.user.role === "ADMIN";
+const isAdmin = (user: User | null) => {
+  return user && user.role == "ADMIN";
 };
 
 builder.prismaObject("Item", {
@@ -43,7 +39,8 @@ export const a = builder.mutationType({
         itemId: t.arg.int({ required: true }),
       },
       resolve: async (q, _, { item, itemId }, ctx) => {
-        if (!isAdmin(ctx)) throw new Error("Not authorized");
+        console.log(ctx);
+        if (!isAdmin(ctx.user)) throw new Error("Not authorized");
         return prisma.item.update({
           ...q,
           where: {
@@ -63,7 +60,7 @@ export const a = builder.mutationType({
         item: t.arg({ type: itemInputRef, required: true }),
       },
       resolve: async (q, _, args, ctx) => {
-        if (!isAdmin(ctx)) throw new Error("Not authorized");
+        if (!isAdmin(ctx.user)) throw new Error("Not authorized");
         const { item } = args;
         return prisma.item.create({
           ...q,
@@ -81,7 +78,7 @@ builder.queryFields((t) => ({
   items: t.prismaField({
     type: ["Item"],
     resolve: (q, _, __, ctx) => {
-      if (!isAdmin(ctx)) throw new Error("Not authorized");
+      if (!isAdmin(ctx.user)) throw new Error("Not authorized");
       return prisma.item.findMany({
         ...q,
       });

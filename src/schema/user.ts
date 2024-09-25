@@ -1,13 +1,10 @@
 import { User } from "@prisma/client";
 import { builder, prisma } from "../builder";
 
-interface Context {
-  user: User;
-}
-
-const isAdmin = (ctx: Context) => {
-  return !ctx.user || ctx.user.role !== "ADMIN";
+const isAdmin = (user: User | null) => {
+  return user && user.role == "ADMIN";
 };
+
 builder.prismaObject("User", {
   description: "A user",
   name: "AuthInputObject",
@@ -26,7 +23,7 @@ builder.queryType({
     users: t.prismaField({
       type: ["User"],
       resolve: (_, args, { db }, ctx) => {
-        if (isAdmin(ctx)) throw new Error("Not authorized");
+        if (!isAdmin(ctx.user)) throw new Error("Not authorized");
         return prisma.user.findMany();
       },
     }),

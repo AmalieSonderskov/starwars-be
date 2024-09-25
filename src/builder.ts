@@ -8,7 +8,7 @@ export const prisma = new PrismaClient();
 
 export const builder = new SchemaBuilder<{
   PrismaTypes: PrismaTypes;
-  Context: { user: User };
+  Context: { user: User | null };
 }>({
   plugins: [PothosPrismaPlugin],
   prisma: {
