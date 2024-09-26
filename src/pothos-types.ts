@@ -1,5 +1,5 @@
 /* eslint-disable */
-import type { Prisma, User, Item } from "@prisma/client";
+import type { Prisma, User, Item, Purchase, Transaction } from "@prisma/client";
 export default interface PrismaTypes {
     User: {
         Name: "User";
@@ -11,12 +11,17 @@ export default interface PrismaTypes {
         Where: Prisma.UserWhereInput;
         Create: {};
         Update: {};
-        RelationName: "items";
-        ListRelations: "items";
+        RelationName: "items" | "Purchase";
+        ListRelations: "items" | "Purchase";
         Relations: {
             items: {
                 Shape: Item[];
                 Name: "Item";
+                Nullable: false;
+            };
+            Purchase: {
+                Shape: Purchase[];
+                Name: "Purchase";
                 Nullable: false;
             };
         };
@@ -31,12 +36,67 @@ export default interface PrismaTypes {
         Where: Prisma.ItemWhereInput;
         Create: {};
         Update: {};
-        RelationName: "user";
-        ListRelations: never;
+        RelationName: "user" | "Transaction";
+        ListRelations: "Transaction";
         Relations: {
             user: {
                 Shape: User;
                 Name: "User";
+                Nullable: false;
+            };
+            Transaction: {
+                Shape: Transaction[];
+                Name: "Transaction";
+                Nullable: false;
+            };
+        };
+    };
+    Purchase: {
+        Name: "Purchase";
+        Shape: Purchase;
+        Include: Prisma.PurchaseInclude;
+        Select: Prisma.PurchaseSelect;
+        OrderBy: Prisma.PurchaseOrderByWithRelationInput;
+        WhereUnique: Prisma.PurchaseWhereUniqueInput;
+        Where: Prisma.PurchaseWhereInput;
+        Create: {};
+        Update: {};
+        RelationName: "buyer" | "transactions";
+        ListRelations: "transactions";
+        Relations: {
+            buyer: {
+                Shape: User;
+                Name: "User";
+                Nullable: false;
+            };
+            transactions: {
+                Shape: Transaction[];
+                Name: "Transaction";
+                Nullable: false;
+            };
+        };
+    };
+    Transaction: {
+        Name: "Transaction";
+        Shape: Transaction;
+        Include: Prisma.TransactionInclude;
+        Select: Prisma.TransactionSelect;
+        OrderBy: Prisma.TransactionOrderByWithRelationInput;
+        WhereUnique: Prisma.TransactionWhereUniqueInput;
+        Where: Prisma.TransactionWhereInput;
+        Create: {};
+        Update: {};
+        RelationName: "purchase" | "item";
+        ListRelations: never;
+        Relations: {
+            purchase: {
+                Shape: Purchase;
+                Name: "Purchase";
+                Nullable: false;
+            };
+            item: {
+                Shape: Item;
+                Name: "Item";
                 Nullable: false;
             };
         };

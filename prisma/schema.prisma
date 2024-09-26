@@ -19,8 +19,9 @@ model User {
   id    Int     @id @default(autoincrement())
   name  String  @unique
   wallet Float
-  items Item[]
   role  String
+  items Item[]
+  Purchase Purchase[]
 }
 
 
@@ -33,4 +34,24 @@ model Item {
   user     User   @relation(fields: [userId], references: [id])
   userId   Int
   forSale  Boolean
+  Transaction Transaction[]
 }
+
+model Purchase {
+  id    Int     @id @default(autoincrement())
+  time String
+  buyer     User   @relation(fields: [buyerId], references: [id])
+  buyerId   Int  
+  transactions Transaction[]
+}
+
+
+model Transaction {
+  id        Int    @id @default(autoincrement())
+  time      String
+  purchase     Purchase   @relation(fields: [purchaseId], references: [id])
+  purchaseId   Int
+  item  Item  @relation(fields: [itemId], references: [id])
+  itemId    Int
+}
+
