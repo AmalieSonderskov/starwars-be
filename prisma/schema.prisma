@@ -24,7 +24,6 @@ model User {
   Purchase Purchase[]
 }
 
-
 model Item {
   id       Int    @id @default(autoincrement())
   name     String @unique
@@ -34,7 +33,6 @@ model Item {
   user     User   @relation(fields: [userId], references: [id])
   userId   Int
   forSale  Boolean
-  Transaction Transaction[]
 }
 
 model Purchase {
@@ -51,7 +49,5 @@ model Transaction {
   time      String
   purchase     Purchase   @relation(fields: [purchaseId], references: [id])
   purchaseId   Int
-  item  Item  @relation(fields: [itemId], references: [id])
-  itemId    Int
+  historicJsonItem String @default("")
 }
-
