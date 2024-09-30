@@ -51,6 +51,30 @@ builder.queryField("userWallet", (t) =>
   })
 );
 
+//Me query
+builder.queryField("userLoggedIn", (t) =>
+  t.prismaField({
+    type: "User",
+    resolve: async (_, args, { db }, ctx) => {
+      if (!ctx.user) throw new Error("Not authorized");
+
+      const user = await prisma.user.findUnique({
+        where: {
+          id: ctx.user!.id,
+        },
+        select: {
+          wallet: true,
+          name: true,
+          role: true,
+          id: true,
+        },
+      });
+
+      return user;
+    },
+  })
+);
+
 // Add Credit to wallet
 builder.mutationField("addCredits", (t) =>
   t.field({

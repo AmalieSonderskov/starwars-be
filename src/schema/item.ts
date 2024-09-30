@@ -8,7 +8,7 @@ const isAdmin = (user: User | null) => {
 builder.prismaObject("Item", {
   description: "An item for sale",
   fields: (t) => ({
-    id: t.exposeID("id"),
+    id: t.exposeInt("id", { nullable: false }),
     name: t.exposeString("name"),
     type: t.exposeString("type"),
     price: t.exposeFloat("price"),
@@ -110,13 +110,13 @@ builder.queryFields((t) => ({
       }),
   }),
 
-  //Get all items for sale
+  //Get all item for sale from other user that are not logged in
   itemsForSale: t.prismaField({
     type: ["Item"],
-    resolve: (_, q) =>
+    resolve: (_, q, __, ctx) =>
       prisma.item.findMany({
         ...q,
-        where: { forSale: true },
+        where: { forSale: true, userId: { not: ctx.user?.id } },
       }),
   }),
 }));
