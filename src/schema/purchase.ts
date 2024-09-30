@@ -1,5 +1,10 @@
-import { arg } from "nexus";
+import { intArg } from "nexus";
 import { builder, prisma } from "../builder";
+import { User } from "@prisma/client";
+
+const isAdmin = (user: User | null) => {
+  return user && user.role == "ADMIN";
+};
 
 builder.prismaObject("Purchase", {
   description: "A record of a purchase",
@@ -17,111 +22,120 @@ builder.prismaObject("Transaction", {
     id: t.exposeID("id"),
     time: t.exposeString("time"),
     purchase: t.relation("purchase"),
-    item: t.relation("item"),
+    historicItem: t.exposeString("historicJsonItem"),
   }),
 });
 
-const purchaseInputRef = builder.inputType("PurchaseInput", {
-  fields: (t) => ({
-    buyerId: t.int({ required: true }),
-  }),
-});
+// Get all purchases (admin only)
+builder.queryField("purchases", (t) =>
+  t.prismaField({
+    type: ["Purchase"],
+    resolve: (_, args, { db }, ctx) => {
+      if (!isAdmin(ctx.user)) throw new Error("Not authorized");
+      return prisma.purchase.findMany({});
+    },
+  })
+);
 
-const transactionInputRef = builder.inputType("TransactionInput", {
-  fields: (t) => ({
-    itemId: t.int({ required: true }),
-  }),
-});
+// Get all purchases on user (user only)
+builder.queryField("userPurchase", (t) =>
+  t.prismaField({
+    type: ["Purchase"],
+    args: {
+      userId: t.arg.int({ required: true }),
+    },
+    resolve: (_, args, { userId }, ctx) => {
+      if (!ctx.user || ctx.user.id != userId) throw new Error("Not authorized");
+      return prisma.purchase.findMany({
+        where: { buyerId: userId },
+      });
+    },
+  })
+);
 
 // Create a Purchase
 builder.mutationField("createPurchase", (t) =>
   t.prismaField({
     type: "Purchase",
     args: {
-      purchase: t.arg({ type: purchaseInputRef, required: true }),
-      transactions: t.arg({ type: [transactionInputRef], required: true }),
+      buyerId: t.arg.int({ required: true }),
+      itemInputs: t.arg.intList({ required: true }),
     },
     resolve: async (q, _, args, ctx) => {
-      if (!ctx.user || ctx.user?.id != args.purchase.buyerId) {
+      if (!ctx.user || ctx.user?.id != args.buyerId) {
         throw new Error("Incorrect User");
       }
 
-      const totalAmountPromises = args.transactions.map(async (transaction) => {
-        const aggregationResult = await prisma.item.aggregate({
-          where: {
-            id: transaction.itemId,
+      const items = await prisma.item.findMany({
+        where: {
+          id: {
+            in: args.itemInputs,
           },
-          _sum: {
-            price: true,
-          },
-        });
-        return aggregationResult._sum.price || 0;
+        },
       });
 
-      const totalAmounts = await Promise.all(totalAmountPromises);
-      const totalAmount = totalAmounts.reduce((sum, amount) => sum + amount, 0);
+      const totalAmount = items.reduce((total, item) => {
+        return total + item.price;
+      }, 0);
 
       if (ctx.user.wallet < totalAmount) {
         throw new Error("Insufficient Funds");
       }
 
-      const finalPurchase = await prisma.purchase.create({
-        data: {
-          time: new Date().toJSON(),
-          buyerId: args.purchase.buyerId,
-          transactions: {
-            create: args.transactions.map((transaction) => ({
-              time: new Date().toJSON(),
-              itemId: transaction.itemId,
-            })),
+      const finalPurchase = await prisma.$transaction(async (prisma) => {
+        const createFinalPurchase = prisma.purchase.create({
+          data: {
+            time: new Date().toString(),
+            buyerId: args.buyerId,
+            transactions: {
+              create: args.itemInputs.map((itemId) => ({
+                time: new Date().toString(),
+                historicJsonItem: JSON.stringify(
+                  items.find((item) => item.id == itemId)
+                ),
+              })),
+            },
           },
-        },
-        ...q,
-      });
-
-      await prisma.user.update({
-        where: {
-          id: args.purchase.buyerId,
-        },
-        data: {
-          wallet: {
-            decrement: totalAmount,
+          ...q,
+        });
+        const buyerPayment = await prisma.user.update({
+          where: {
+            id: args.buyerId,
           },
-        },
-      });
-
-      let itemIds: number[] = args.transactions.map(
-        (element) => element.itemId
-      );
-      const items = await prisma.item.findMany({
-        where: {
-          id: {
-            in: itemIds,
-          },
-        },
-      });
-
-      for (const item of items) {
-        await prisma.user.update({
-          where: { id: item.userId },
           data: {
             wallet: {
-              increment: item.price,
+              decrement: totalAmount,
             },
           },
         });
-      }
 
-      for (const item of items) {
-        await prisma.item.update({
-          where: { id: item.id },
-          data: {
-            userId: {
-              set: args.purchase.buyerId,
-            },
-          },
-        });
-      }
+        const addSellerEarningsAndUpdatwOwnership = async () => {
+          for (const item of items) {
+            await prisma.user.update({
+              where: { id: item.userId },
+              data: {
+                wallet: {
+                  increment: item.price,
+                },
+              },
+            });
+            await prisma.item.update({
+              where: { id: item.id },
+              data: {
+                userId: {
+                  set: args.buyerId,
+                },
+              },
+            });
+          }
+        };
+
+        const updatedUsers = await addSellerEarningsAndUpdatwOwnership();
+
+        await Promise.all([createFinalPurchase, buyerPayment, updatedUsers]);
+
+        return createFinalPurchase;
+      });
 
       return finalPurchase;
     },
