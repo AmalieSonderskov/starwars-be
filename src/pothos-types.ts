@@ -36,17 +36,12 @@ export default interface PrismaTypes {
         Where: Prisma.ItemWhereInput;
         Create: {};
         Update: {};
-        RelationName: "user" | "Transaction";
-        ListRelations: "Transaction";
+        RelationName: "user";
+        ListRelations: never;
         Relations: {
             user: {
                 Shape: User;
                 Name: "User";
-                Nullable: false;
-            };
-            Transaction: {
-                Shape: Transaction[];
-                Name: "Transaction";
                 Nullable: false;
             };
         };
@@ -86,17 +81,12 @@ export default interface PrismaTypes {
         Where: Prisma.TransactionWhereInput;
         Create: {};
         Update: {};
-        RelationName: "purchase" | "item";
+        RelationName: "purchase";
         ListRelations: never;
         Relations: {
             purchase: {
                 Shape: Purchase;
                 Name: "Purchase";
-                Nullable: false;
-            };
-            item: {
-                Shape: Item;
-                Name: "Item";
                 Nullable: false;
             };
         };
