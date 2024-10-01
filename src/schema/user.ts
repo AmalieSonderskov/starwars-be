@@ -16,6 +16,7 @@ builder.prismaObject("User", {
     items: t.relation("items"),
     wallet: t.exposeFloat("wallet"),
     role: t.exposeString("role"),
+    picture: t.exposeString("picture"),
   }),
 });
 
@@ -67,6 +68,7 @@ builder.queryField("userLoggedIn", (t) =>
           name: true,
           role: true,
           id: true,
+          picture: true,
         },
       });
 
@@ -103,6 +105,36 @@ builder.mutationField("addCredits", (t) =>
         },
       });
       return updatedUser.wallet;
+    },
+  })
+);
+
+//Update user picture
+builder.mutationField("updateProfilePicture", (t) =>
+  t.field({
+    type: "String",
+    args: {
+      picture: t.arg.string({ required: true }),
+    },
+    resolve: async (_, { picture }, ctx) => {
+      if (!ctx.user) {
+        throw new Error("Not authorized");
+      }
+
+      const userId = ctx.user.id;
+
+      const updatedUser = await prisma.user.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          picture,
+        },
+        select: {
+          picture: true,
+        },
+      });
+      return updatedUser.picture;
     },
   })
 );
