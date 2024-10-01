@@ -40,7 +40,7 @@ export const a = builder.mutationType({
       },
       resolve: async (q, _, { item, itemId }, ctx) => {
         console.log(ctx);
-        if (!isAdmin(ctx.user)) throw new Error("Not authorized");
+
         return prisma.item.update({
           ...q,
           where: {
