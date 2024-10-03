@@ -13,16 +13,7 @@ builder.prismaObject("Purchase", {
     time: t.exposeString("time"),
     buyerId: t.exposeInt("buyerId"),
     transactions: t.relation("transactions"),
-  }),
-});
-
-builder.prismaObject("Transaction", {
-  description: "A transaction associated with a purchase",
-  fields: (t) => ({
-    id: t.exposeID("id"),
-    time: t.exposeString("time"),
-    purchase: t.relation("purchase"),
-    historicItem: t.exposeString("historicJsonItem"),
+    sales: t.relation("sales"),
   }),
 });
 
@@ -45,6 +36,8 @@ builder.queryField("userPurchase", (t) =>
       userId: t.arg.int({ required: true }),
     },
     resolve: (_, args, { userId }, ctx) => {
+      console.log({ userId, ctx });
+
       if (!ctx.user || ctx.user.id != userId) throw new Error("Not authorized");
       return prisma.purchase.findMany({
         where: { buyerId: userId },
@@ -83,13 +76,14 @@ builder.mutationField("createPurchase", (t) =>
       }
 
       const finalPurchase = await prisma.$transaction(async (prisma) => {
+        const currentTime = new Date().toString();
         const createFinalPurchase = prisma.purchase.create({
           data: {
-            time: new Date().toString(),
+            time: currentTime,
             buyerId: args.buyerId,
             transactions: {
               create: args.itemInputs.map((itemId) => ({
-                time: new Date().toString(),
+                time: currentTime,
                 historicJsonItem: JSON.stringify(
                   items.find((item) => item.id == itemId)
                 ),
@@ -109,7 +103,7 @@ builder.mutationField("createPurchase", (t) =>
           },
         });
 
-        const addSellerEarningsAndUpdatwOwnership = async () => {
+        const addSellerEarningsUpdatwOwnershipCreateSale = async () => {
           for (const item of items) {
             await prisma.user.update({
               where: { id: item.userId },
@@ -127,10 +121,18 @@ builder.mutationField("createPurchase", (t) =>
                 },
               },
             });
+            await prisma.sale.create({
+              data: {
+                time: currentTime,
+                sellerId: item.userId,
+                purchaseId: (await createFinalPurchase).id,
+                historicJsonItems: JSON.stringify(item),
+              },
+            });
           }
         };
 
-        const updatedUsers = await addSellerEarningsAndUpdatwOwnership();
+        const updatedUsers = await addSellerEarningsUpdatwOwnershipCreateSale();
 
         await Promise.all([createFinalPurchase, buyerPayment, updatedUsers]);
 
