@@ -23,6 +23,7 @@ model User {
   picture String @default("/assets/WattoProfile.png")
   items Item[]
   Purchase Purchase[]
+  sales Sale[]
 }
 
 model Item {
@@ -42,6 +43,7 @@ model Purchase {
   buyer     User   @relation(fields: [buyerId], references: [id])
   buyerId   Int  
   transactions Transaction[]
+  sales Sale[]
 }
 
 
@@ -51,4 +53,14 @@ model Transaction {
   purchase     Purchase   @relation(fields: [purchaseId], references: [id])
   purchaseId   Int
   historicJsonItem String @default("")
+}
+
+model Sale {
+  id    Int     @id @default(autoincrement())
+  time String
+  seller     User   @relation(fields: [sellerId], references: [id])
+  sellerId   Int
+  purchase     Purchase   @relation(fields: [purchaseId], references: [id])
+  purchaseId   Int
+  historicJsonItems String @default("")
 }
