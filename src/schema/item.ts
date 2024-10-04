@@ -5,7 +5,7 @@ const isAdmin = (user: User | null) => {
   return user && user.role == "ADMIN";
 };
 
-builder.prismaObject("Item", {
+export const itemObject = builder.prismaObject("Item", {
   description: "An item for sale",
   fields: (t) => ({
     id: t.exposeInt("id", { nullable: false }),
@@ -15,6 +15,7 @@ builder.prismaObject("Item", {
     description: t.exposeString("description"),
     user: t.relation("user"),
     forSale: t.exposeBoolean("forSale"),
+    weight: t.exposeFloat("weight"),
   }),
 });
 
@@ -62,12 +63,14 @@ export const a = builder.mutationType({
       resolve: async (q, _, args, ctx) => {
         if (!isAdmin(ctx.user)) throw new Error("Not authorized");
         const { item } = args;
-        return prisma.item.create({
+        const itemOutput = await prisma.item.create({
           ...q,
           data: {
             ...item,
           },
         });
+        ctx.pubSub.publish("ITEMS_UPDATE");
+        return itemOutput;
       },
     }),
   }),
