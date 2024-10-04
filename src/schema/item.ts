@@ -42,7 +42,7 @@ export const a = builder.mutationType({
       resolve: async (q, _, { item, itemId }, ctx) => {
         console.log(ctx);
 
-        return prisma.item.update({
+        const itemOutput = await prisma.item.update({
           ...q,
           where: {
             id: itemId,
@@ -52,6 +52,8 @@ export const a = builder.mutationType({
             id: itemId,
           },
         });
+        ctx.pubSub.publish("ITEMS_UPDATE");
+        return itemOutput;
       },
     }),
     //Create a new item (admin only)
