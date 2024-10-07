@@ -5,6 +5,7 @@ import { verify } from "jsonwebtoken";
 import "./schema";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/lib/use/ws";
+import { publishWeight } from "./publisher";
 
 async function auth(req: Request) {
   if (!req || !req.headers) {
@@ -34,7 +35,7 @@ async function auth(req: Request) {
   }
 }
 
-const pubsub = createPubSub();
+export const pubsub = createPubSub();
 export type PubSub = typeof pubsub;
 
 const yoga = createYoga({
@@ -87,3 +88,4 @@ useServer(
 );
 
 server.listen(42069);
+publishWeight();
