@@ -4,3 +4,4 @@ import "./auth";
 import "./purchase";
 import "./transactions";
 import "./sales";
+import "./subscriptions";

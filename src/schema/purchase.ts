@@ -36,9 +36,11 @@ builder.queryField("userPurchase", (t) =>
       userId: t.arg.int({ required: true }),
     },
     resolve: (_, args, { userId }, ctx) => {
+      console.log(ctx);
       console.log({ userId, ctx });
 
-      if (!ctx.user || ctx.user.id != userId) throw new Error("Not authorized");
+      if (!ctx.user) throw new Error("Not authorized");
+      if (ctx.user.id != userId) throw new Error("Userid doesn't match");
       return prisma.purchase.findMany({
         where: { buyerId: userId },
       });

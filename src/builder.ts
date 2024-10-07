@@ -1,14 +1,17 @@
 import { PrismaClient, User } from "@prisma/client";
 import SchemaBuilder from "@pothos/core";
-
 import PothosPrismaPlugin from "@pothos/plugin-prisma";
 import PrismaTypes from "./pothos-types";
+import { PubSub } from "./server";
 
 export const prisma = new PrismaClient();
 
 export const builder = new SchemaBuilder<{
   PrismaTypes: PrismaTypes;
-  Context: { user: User | null };
+  Context: {
+    user: User | null;
+    pubSub: PubSub;
+  };
 }>({
   plugins: [PothosPrismaPlugin],
   prisma: {
