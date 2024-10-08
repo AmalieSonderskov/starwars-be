@@ -1,4 +1,3 @@
-import { intArg } from "nexus";
 import { builder, prisma } from "../builder";
 import { User } from "@prisma/client";
 
@@ -70,7 +69,7 @@ builder.mutationField("createPurchase", (t) =>
       });
 
       const totalAmount = items.reduce((total, item) => {
-        return total + item.price;
+        return total + item.price*item.weight;
       }, 0);
 
       if (ctx.user.wallet < totalAmount) {
@@ -111,7 +110,7 @@ builder.mutationField("createPurchase", (t) =>
               where: { id: item.userId },
               data: {
                 wallet: {
-                  increment: item.price,
+                  increment: item.price*item.weight,
                 },
               },
             });
