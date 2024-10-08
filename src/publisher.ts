@@ -6,7 +6,8 @@ export async function publishWeight() {
     const itemsByType = await getTypedLists();
 
     const updates = itemsByType.map(async (typeList) => {
-      const newWeight = Math.random() * 10;
+      const newWeight = Math.random() * 4 + 1;
+      console.log(`Updating ${typeList[0].type} to ${newWeight}`);
       const itemType = typeList[0].type;
 
       await prisma.item.updateMany({
