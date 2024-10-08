@@ -68,9 +68,9 @@ builder.mutationField("createPurchase", (t) =>
         },
       });
 
-      const totalAmount = items.reduce((total, item) => {
+      const totalAmount = Math.floor(items.reduce((total, item) => {
         return total + item.price*item.weight;
-      }, 0);
+      }, 0))
 
       if (ctx.user.wallet < totalAmount) {
         throw new Error("Insufficient Funds");
@@ -110,7 +110,7 @@ builder.mutationField("createPurchase", (t) =>
               where: { id: item.userId },
               data: {
                 wallet: {
-                  increment: item.price*item.weight,
+                  increment: Math.floor(item.price*item.weight),
                 },
               },
             });
