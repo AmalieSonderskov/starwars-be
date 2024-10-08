@@ -13,11 +13,17 @@ builder.subscriptionFields((t) => ({
 
       return ctx.pubSub.subscribe("ITEMS_UPDATE");
     },
-    resolve: (_parent, _args, ctx) =>
-      prisma.item.findMany({
+    resolve: async (_parent, _args, ctx) =>{
+      const items = await prisma.item.findMany({
         where: {
           forSale: true,
         },
-      }),
-  }),
-}));
+      });
+      const postItems = items.map(item => {
+        return {
+            ...item,
+            price: Math.floor(item.price * item.weight)
+        };
+    })
+  return postItems
+}})}))

@@ -16,8 +16,7 @@ export async function publishWeight() {
       });
     });
 
-    const updatedItems = await prisma.item.findMany();
-    pubsub.publish("ITEMS_UPDATE", { updatedItems });
+    pubsub.publish("ITEMS_UPDATE");
   }, 10000);
 }
 
