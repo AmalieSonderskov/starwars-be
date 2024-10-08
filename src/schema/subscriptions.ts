@@ -4,14 +4,20 @@ import { itemObject } from "./item";
 builder.subscriptionType({});
 
 builder.subscriptionFields((t) => ({
-  incrementedCount: t.field({
+  itemsForSale: t.field({
     type: [itemObject],
     subscribe: (_parent, _args, ctx) => {
       setTimeout(() => {
         ctx.pubSub.publish("ITEMS_UPDATE");
       }, 100);
+
       return ctx.pubSub.subscribe("ITEMS_UPDATE");
     },
-    resolve: () => prisma.item.findMany(),
+    resolve: (_parent, _args, ctx) =>
+      prisma.item.findMany({
+        where: {
+          forSale: true,
+        },
+      }),
   }),
 }));
