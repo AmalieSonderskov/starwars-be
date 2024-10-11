@@ -1,5 +1,7 @@
 import { User } from "@prisma/client";
 import { builder, prisma } from "../builder";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { GraphQLError } from "graphql";
 
 const isAdmin = (user: User | null) => {
   return user && user.role == "ADMIN";
@@ -65,10 +67,42 @@ export const a = builder.mutationType({
       resolve: async (q, _, args, ctx) => {
         if (!isAdmin(ctx.user)) throw new Error("Not authorized");
         const { item } = args;
-        const itemOutput = await prisma.item.create({
+        try {
+          const itemOutput = await prisma.item.create({
+            ...q,
+            data: {
+              ...item,
+            },
+          });
+          ctx.pubSub.publish("ITEMS_UPDATE");
+          return itemOutput;
+        } catch (error) {
+          if (
+            error instanceof PrismaClientKnownRequestError &&
+            error.code === "P2002"
+          ) {
+            throw new GraphQLError(
+              `Item with name "${item.name}" already exists`,
+              {
+                extensions: { code: "ITEM_ALREADY_EXISTS" },
+              }
+            );
+          }
+          throw error;
+        }
+      },
+    }),
+    //Delete an item
+    deleteItem: t.prismaField({
+      type: "Item",
+      args: {
+        itemId: t.arg.int({ required: true }),
+      },
+      resolve: async (q, _, { itemId }, ctx) => {
+        const itemOutput = await prisma.item.delete({
           ...q,
-          data: {
-            ...item,
+          where: {
+            id: itemId,
           },
         });
         ctx.pubSub.publish("ITEMS_UPDATE");

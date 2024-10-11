@@ -23,7 +23,7 @@ const prisma = new PrismaClient();
       {
         name: "Blue crystal",
         type: "Kyber Crystal",
-        price: 5000,
+        price: 99000,
         description: "Good quality blue crystal",
         userId: user1.id,
         forSale: true,
