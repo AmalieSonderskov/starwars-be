@@ -1,3 +1,4 @@
+import { GraphQLError } from "graphql";
 import { builder, prisma } from "../builder";
 import { User } from "@prisma/client";
 
@@ -68,12 +69,16 @@ builder.mutationField("createPurchase", (t) =>
         },
       });
 
-      const totalAmount = Math.floor(items.reduce((total, item) => {
-        return total + item.price*item.weight;
-      }, 0))
+      const totalAmount = Math.floor(
+        items.reduce((total, item) => {
+          return total + item.price * item.weight;
+        }, 0)
+      );
 
       if (ctx.user.wallet < totalAmount) {
-        throw new Error("Insufficient Funds");
+        throw new GraphQLError("Insufficient Funds", {
+          extensions: { code: "INSUFFICIENT_FUNDS" },
+        });
       }
 
       const finalPurchase = await prisma.$transaction(async (prisma) => {
@@ -110,7 +115,7 @@ builder.mutationField("createPurchase", (t) =>
               where: { id: item.userId },
               data: {
                 wallet: {
-                  increment: Math.floor(item.price*item.weight),
+                  increment: Math.floor(item.price * item.weight),
                 },
               },
             });
