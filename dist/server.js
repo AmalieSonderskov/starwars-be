@@ -12,12 +12,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.pubsub = void 0;
 const graphql_yoga_1 = require("graphql-yoga");
 const node_http_1 = require("node:http");
-const builder_1 = require("./builder");
+const builder_1 = require("./src/builder");
 const jsonwebtoken_1 = require("jsonwebtoken");
-require("./schema");
+require("./src/schema");
 const ws_1 = require("ws");
 const ws_2 = require("graphql-ws/lib/use/ws");
-const publisher_1 = require("./publisher");
+const publisher_1 = require("./src/publisher");
 function auth(req) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
@@ -88,6 +88,6 @@ const wsServer = new ws_1.WebSocketServer({
         return args;
     }),
 }, wsServer);
-server.listen(42069);
+server.listen(process.env.PORT || 42069);
 (0, publisher_1.publishWeight)();
 //# sourceMappingURL=server.js.map

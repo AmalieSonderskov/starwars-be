@@ -1,11 +1,11 @@
 import { createPubSub, createYoga } from "graphql-yoga";
 import { createServer } from "node:http";
-import { builder, prisma } from "./builder";
+import { builder, prisma } from "./src/builder";
 import { verify } from "jsonwebtoken";
-import "./schema";
+import "./src/schema";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/lib/use/ws";
-import { publishWeight } from "./publisher";
+import { publishWeight } from "./src/publisher";
 
 async function auth(req: Request) {
   if (!req || !req.headers) {
@@ -87,5 +87,5 @@ useServer(
   wsServer
 );
 
-server.listen(42069);
+server.listen(process.env.PORT || 42069);
 publishWeight();

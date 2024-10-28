@@ -1,5 +1,5 @@
 import { prisma } from "./builder";
-import { pubsub } from "./server";
+import { pubsub } from "../server";
 
 export async function publishWeight() {
   setInterval(async () => {

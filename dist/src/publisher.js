@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.publishWeight = publishWeight;
 const builder_1 = require("./builder");
-const server_1 = require("./server");
+const server_1 = require("../server");
 function publishWeight() {
     return __awaiter(this, void 0, void 0, function* () {
         setInterval(() => __awaiter(this, void 0, void 0, function* () {
