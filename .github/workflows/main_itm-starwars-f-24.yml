@@ -61,4 +61,4 @@ jobs:
           app-name: "itm-starwars-f-24"
           slot-name: "Production"
           package: .
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B63BAAD66A4547B49E238C43D33A11EE }}
+          publish-profile: ${{ secrets.BE_PUBLISH_PROFILE }}
