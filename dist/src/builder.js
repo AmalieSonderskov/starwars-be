@@ -7,7 +7,14 @@ exports.builder = exports.prisma = void 0;
 const client_1 = require("@prisma/client");
 const core_1 = __importDefault(require("@pothos/core"));
 const plugin_prisma_1 = __importDefault(require("@pothos/plugin-prisma"));
-exports.prisma = new client_1.PrismaClient();
+const client_2 = require("@libsql/client");
+const adapter_libsql_1 = require("@prisma/adapter-libsql");
+const libsql = (0, client_2.createClient)({
+    url: `${process.env.DATABASE_URL}`,
+    authToken: `${process.env.DATABASE_AUTH_TOKEN}`,
+});
+const adapter = new adapter_libsql_1.PrismaLibSQL(libsql);
+exports.prisma = new client_1.PrismaClient({ adapter });
 exports.builder = new core_1.default({
     plugins: [plugin_prisma_1.default],
     prisma: {
