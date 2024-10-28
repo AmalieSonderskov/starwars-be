@@ -5,12 +5,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "prisma generate && prisma migrate deploy && node dist/server.js",
     "dev": "ts-node-dev src/server.ts",
     "migrate:dev": "prisma migrate dev --name",
     "generate": "prisma generate",
-    "seed": "ts-node prisma/seed.ts",
-    "postinstall": "prisma generate && prisma migrate deploy"
+    "seed": "ts-node prisma/seed.ts"
   },
   "author": "",
   "license": "ISC",
